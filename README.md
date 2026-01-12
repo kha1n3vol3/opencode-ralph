@@ -78,16 +78,22 @@ jq --version
 
 4. **Run Ralph to verify setup:**
    ```bash
-   ./ralph.sh 1  # Run one iteration
+   # Method 1: Use OpenCode command
+   opencode /ralph-run 1
+   
+   # Method 2: Run orchestrator agent directly
+   opencode run --agent ralph --maxSteps 100 1
    ```
    
    Expected behavior:
-   - Ralph creates `progress.txt` if not exists
-   - Picks highest priority story from `prd.json`
-   - Runs OpenCode agent to implement the story
+   - Ralph orchestrator agent loads Ralph skill
+   - Validates prerequisites (PRD, progress.txt, core.py)
+   - Spawns worker subagent for highest priority story
+   - Worker implements the story using `prompt.md` instructions
    - Runs quality gates (tests, linting, formatting)
    - Commits changes with story ID in message
    - Updates `prd.json` with `passes: true` for completed story
+   - Outputs `<promise>COMPLETE</promise>` when all stories done
 
 ### OpenCode Agent Configuration
 
@@ -130,10 +136,14 @@ Create a `prd.json` file in your project root (use `prd.json.example` as templat
 ### 2. Run Ralph Loop
 
 ```bash
-./ralph.sh [max_iterations]
+# Use OpenCode command (recommended)
+opencode /ralph-run [max_iterations]
+
+# Or run orchestrator agent directly
+opencode run --agent ralph --maxSteps 100 [max_iterations]
 ```
 
-Default max iterations: 10. Use `./ralph.sh 5` for 5 iterations.
+Default max iterations: 10. Use `5` for 5 iterations.
 
 ### 3. Orchestrator-Worker Execution Flow
 
@@ -172,7 +182,7 @@ If quality checks fail, the story is not marked complete.
 
 | File | Purpose |
 |------|---------|
-| `ralph.sh` | Bash loop that pipes `prompt.md` to `opencode run` |
+| `ralph.sh` | **DEPRECATED** - Legacy bash loop (use OpenCode agents instead) |
 | `prompt.md` | Detailed instructions for OpenCode agents (tool usage, quality gates) |
 | `prd.json` | Product Requirements Document with user stories and completion status |
 | `prd.json.example` | Example PRD format |
@@ -246,7 +256,7 @@ Ralph requires robust feedback loops:
 
 ### Stop Condition Detection
 
-When all stories have `passes: true`, the orchestrator outputs `<promise>COMPLETE</promise>` and the loop exits. The COMPLETE signal is detected by the bash script (`ralph.sh`) which stops execution.
+When all stories have `passes: true`, the orchestrator outputs `<promise>COMPLETE</promise>` and exits. The COMPLETE signal indicates successful completion of all user stories.
 
 ## Debugging
 

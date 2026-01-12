@@ -231,13 +231,18 @@ class RalphOpenCodeDemo:
         """Demonstrate Ralph loop (without full execution)."""
         step("Demonstrating Ralph loop structure")
 
-        info("Ralph loop (from ralph.sh):")
-        with open(self.project_root / "ralph.sh", "r") as f:
-            lines = f.readlines()
-            # Show key parts of the script
-            for i, line in enumerate(lines):
-                if "opencode run" in line or "COMPLETE" in line or "Iteration" in line:
-                    info(f"  {line.rstrip()}")
+        info("Ralph OpenCode Architecture:")
+        info("  Primary Orchestrator: .opencode/agent/ralph.md")
+        info("    - Mode: primary, loads Ralph skill")
+        info("    - Tools: bash, read, write, edit, glob, grep, task, skill")
+        info("    - Spawns worker subagents via Task tool")
+        info("  Worker Subagent: .opencode/agent/ralph-worker.md")
+        info("    - Mode: subagent, hidden: true")
+        info("    - Implements single user stories")
+        info("    - Returns SUCCESS/FAILURE signals")
+        info("  Ralph Skill: .opencode/skill/ralph/SKILL.md")
+        info("    - Contains orchestrator workflow instructions")
+        info("    - Defines quality gates and safeguards")
 
         info("\nRalph prompt structure:")
         with open(self.project_root / "prompt.md", "r") as f:
@@ -245,9 +250,14 @@ class RalphOpenCodeDemo:
             for i, line in enumerate(f.readlines()[:10]):
                 info(f"  {line.rstrip()}")
 
-        info("\nTo run Ralph with OpenCode:")
+        info("\nTo run Ralph with OpenCode agents:")
         info(f"  cd {self.demo_dir}")
-        info("  ./ralph.sh 1  # Run 1 iteration")
+        info("  # Legacy method (deprecated):")
+        info("  # ./ralph.sh 1  # Pipes prompt.md to opencode run")
+        info("  # New orchestrator-worker pattern:")
+        info("  opencode /ralph-run 1  # Use OpenCode command")
+        info("  # Or run orchestrator agent directly:")
+        info("  opencode run --agent ralph --maxSteps 100 1")
 
         success("Ralph workflow ready")
         return True

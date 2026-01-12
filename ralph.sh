@@ -1,8 +1,23 @@
 #!/bin/bash
-# Ralph Wiggum - Long-running AI agent loop
+# Ralph Wiggum - Long-running AI agent loop (DEPRECATED)
 # Usage: ./ralph.sh [max_iterations]
+#
+# DEPRECATED: Use OpenCode agents instead:
+#   opencode /ralph-run [max_iterations]
+#   opencode run --agent ralph --maxSteps 100 [max_iterations]
 
 set -e
+
+echo "╔═══════════════════════════════════════════════════════╗" >&2
+echo "║ WARNING: ralph.sh is DEPRECATED                      ║" >&2
+echo "║ Use OpenCode agents instead:                         ║" >&2
+echo "║   opencode /ralph-run [max_iterations]               ║" >&2
+echo "║   opencode run --agent ralph --maxSteps 100          ║" >&2
+echo "╚═══════════════════════════════════════════════════════╝" >&2
+echo "" >&2
+echo "This script will run in legacy mode (piping prompt.md to opencode run)." >&2
+echo "The new orchestrator-worker pattern provides better context isolation." >&2
+echo "" >&2
 
 MAX_ITERATIONS=${1:-10}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

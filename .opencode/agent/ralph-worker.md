@@ -4,15 +4,15 @@ description: "Ralph worker agent - implements single user stories (hidden subage
 mode: subagent
 hidden: true
 tools:
-  bash: allow
-  read: allow
-  write: allow
-  edit: allow
-  glob: allow
-  grep: allow
-  skill: allow
-  todowrite: allow
-  todoread: allow
+  bash: true
+  read: true
+  write: true
+  edit: true
+  glob: true
+  grep: true
+  skill: true
+  todowrite: true
+  todoread: true
 model: anthropic/claude-3-5-sonnet-20241022 # Default; can be overridden by environment
 prompt: |
   You are a Ralph worker agent. Your job is to implement a single user story.

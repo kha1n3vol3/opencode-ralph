@@ -3,17 +3,17 @@ name: ralph
 description: "Ralph orchestrator agent - loads Ralph skill for autonomous development loops"
 mode: primary
 tools:
-  bash: allow
-  read: allow
-  write: allow
-  edit: allow
-  glob: allow
-  grep: allow
-  task: allow
-  skill: allow
-  todowrite: allow
-  todoread: allow
-  webfetch: allow
+  bash: true
+  read: true
+  write: true
+  edit: true
+  glob: true
+  grep: true
+  task: true
+  skill: true
+  todowrite: true
+  todoread: true
+  webfetch: true
 model: anthropic/claude-3-5-sonnet-20241022
 prompt: |
   You are the Ralph orchestrator agent. Your job is to run the Ralph autonomous development loop.
