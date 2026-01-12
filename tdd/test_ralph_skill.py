@@ -9,7 +9,6 @@ import json
 import tempfile
 import pytest
 import sys
-import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -38,7 +37,6 @@ class TestRalphSkillInstallation:
 
             # Verify key files were copied
             expected_files = [
-                target_path / "scripts" / "ralph" / "ralph.sh",
                 target_path / "scripts" / "ralph" / "prompt.md",
                 target_path / ".opencode" / "command" / "ralph-run.md",
                 target_path / ".opencode" / "command" / "ralph-validate.md",
@@ -52,9 +50,8 @@ class TestRalphSkillInstallation:
                 assert file_path.exists(), f"Required file not found: {file_path}"
                 assert file_path.is_file(), f"Not a file: {file_path}"
 
-            # Verify ralph.sh is executable
-            ralph_sh = target_path / "scripts" / "ralph" / "ralph.sh"
-            assert os.access(ralph_sh, os.X_OK), f"ralph.sh not executable: {ralph_sh}"
+            # Note: ralph.sh is deprecated and not included in installation
+            # Ralph now uses OpenCode agents directly via @ralph or /ralph-run command
 
 
 class TestRalphSkillInvocation:
@@ -182,7 +179,7 @@ class TestRalphSkillInvocation:
             prompt_path.read_text()  # Verify file is readable
 
             # Run opencode with the prompt (limited timeout for test)
-            # This simulates what ralph.sh does
+            # This simulates what Ralph does via OpenCode agents
             try:
                 # We'll run a simple test - just check opencode can parse the prompt
                 # without actually completing full execution (which could be long)
@@ -203,26 +200,9 @@ class TestRalphSkillInvocation:
                 # For a real test, we would run: cat prompt.md | opencode run --file prd.json --file progress.txt
                 # But that could take time and make API calls
 
-                # Instead, verify that ralph.sh would work by checking it's executable
-                ralph_sh = project_path / "scripts" / "ralph" / "ralph.sh"
-                assert os.access(ralph_sh, os.X_OK), "ralph.sh not executable"
-
-                # Test a dry-run of ralph.sh (just check it starts)
-                ralph_test = subprocess.run(
-                    [str(ralph_sh), "1"],
-                    cwd=project_path,
-                    capture_output=True,
-                    text=True,
-                    timeout=5,  # Short timeout - just check it starts
-                )
-
-                # Ralph might fail because opencode needs API, but should at least start
-                print(
-                    f"Ralph test output (first 200 chars): {ralph_test.stdout[:200]}..."
-                )
-                print(
-                    f"Ralph test stderr (first 200 chars): {ralph_test.stderr[:200]}..."
-                )
+                # Note: ralph.sh is deprecated. Ralph now uses OpenCode agents directly.
+                # The test verifies that opencode CLI works and prompt.md exists.
+                # Actual Ralph invocation would use: @ralph or /ralph-run command
 
                 # The test passes if we get here without crashes
                 # Actual completion would require opencode API access

@@ -4,7 +4,6 @@ Ralph skill invocation module.
 Provides functions to invoke Ralph loop for testing.
 """
 
-import os
 from pathlib import Path
 
 
@@ -20,14 +19,23 @@ def invoke_ralph_loop(project_dir: Path, max_iterations: int = 1) -> bool:
         True if invocation successful, False otherwise
     """
     try:
-        # Check if ralph.sh exists and is executable
-        ralph_sh = project_dir / "scripts" / "ralph" / "ralph.sh"
-        if not ralph_sh.exists():
-            print(f"ralph.sh not found at {ralph_sh}")
+        # Check if OpenCode commands exist (ralph.sh is deprecated)
+        opencode_cmd_dir = project_dir / ".opencode" / "command"
+        if not opencode_cmd_dir.exists():
+            print(f"OpenCode command directory not found at {opencode_cmd_dir}")
             return False
 
-        if not os.access(ralph_sh, os.X_OK):
-            print(f"ralph.sh not executable at {ralph_sh}")
+        # Check for Ralph OpenCode commands
+        ralph_commands = ["ralph-run.md", "ralph-validate.md", "ralph-status.md"]
+        found_commands = []
+        for cmd in ralph_commands:
+            if (opencode_cmd_dir / cmd).exists():
+                found_commands.append(cmd)
+
+        if not found_commands:
+            print(
+                f"No Ralph OpenCode commands found. Expected at least one of: {ralph_commands}"
+            )
             return False
 
         # Check if PRD exists
@@ -36,9 +44,11 @@ def invoke_ralph_loop(project_dir: Path, max_iterations: int = 1) -> bool:
             print(f"PRD not found at {prd_file}")
             return False
 
-        # For testing purposes, we'll simulate a successful invocation
-        # without actually running opencode (which would be slow and require CLI)
-        # Instead, we'll create a minimal test that validates the setup
+        # Check if Ralph skill exists
+        skill_file = project_dir / ".opencode" / "skill" / "ralph" / "SKILL.md"
+        if not skill_file.exists():
+            print(f"Ralph skill not found at {skill_file}")
+            return False
 
         # Create a test progress file if it doesn't exist
         progress_file = project_dir / "progress.txt"
@@ -46,8 +56,8 @@ def invoke_ralph_loop(project_dir: Path, max_iterations: int = 1) -> bool:
             progress_file.write_text("# Ralph Progress Log\nStarted: Test\n---\n")
 
         # Return True to indicate setup is valid and ready for invocation
-        # In a real test, you would actually run:
-        # subprocess.run([str(ralph_sh), str(max_iterations)], cwd=project_dir, check=True)
+        # Ralph now uses OpenCode agents directly via @ralph or /ralph-run command
+        # In a real test, you would run: opencode /ralph-run [max_iterations]
 
         return True
 
@@ -68,20 +78,29 @@ def test_ralph_invocation(project_dir: Path) -> dict:
     """
     results = {
         "success": False,
-        "ralph_sh_exists": False,
-        "ralph_sh_executable": False,
+        "opencode_commands_available": False,
         "prd_exists": False,
         "progress_exists": False,
         "opencode_commands": [],
         "skills": [],
+        "ralph_skill_exists": False,
     }
 
     try:
-        # Check ralph.sh
-        ralph_sh = project_dir / "scripts" / "ralph" / "ralph.sh"
-        results["ralph_sh_exists"] = ralph_sh.exists()
-        if ralph_sh.exists():
-            results["ralph_sh_executable"] = os.access(ralph_sh, os.X_OK)
+        # Check OpenCode commands (ralph.sh is deprecated)
+        opencode_cmd_dir = project_dir / ".opencode" / "command"
+        if opencode_cmd_dir.exists():
+            results["opencode_commands"] = [
+                f.name
+                for f in opencode_cmd_dir.iterdir()
+                if f.is_file() and f.suffix == ".md"
+            ]
+            # Check if we have Ralph commands
+            ralph_commands = ["ralph-run.md", "ralph-validate.md", "ralph-status.md"]
+            found_commands = [
+                cmd for cmd in ralph_commands if cmd in results["opencode_commands"]
+            ]
+            results["opencode_commands_available"] = len(found_commands) > 0
 
         # Check PRD
         prd_file = project_dir / "prd.json"
@@ -91,27 +110,19 @@ def test_ralph_invocation(project_dir: Path) -> dict:
         progress_file = project_dir / "progress.txt"
         results["progress_exists"] = progress_file.exists()
 
-        # Check OpenCode commands
-        opencode_cmd_dir = project_dir / ".opencode" / "command"
-        if opencode_cmd_dir.exists():
-            results["opencode_commands"] = [
-                f.name
-                for f in opencode_cmd_dir.iterdir()
-                if f.is_file() and f.suffix == ".md"
-            ]
-
         # Check skills
         skill_dir = project_dir / ".opencode" / "skill" / "ralph"
         if skill_dir.exists():
             skill_file = skill_dir / "SKILL.md"
             if skill_file.exists():
                 results["skills"] = ["ralph"]
+                results["ralph_skill_exists"] = True
 
-        # Overall success if basic files exist
+        # Overall success if OpenCode commands and PRD exist
         results["success"] = (
-            results["ralph_sh_exists"]
-            and results["ralph_sh_executable"]
+            results["opencode_commands_available"]
             and results["prd_exists"]
+            and results["ralph_skill_exists"]
         )
 
     except Exception as e:
@@ -151,8 +162,10 @@ if __name__ == "__main__":
         results = test_ralph_invocation(project_path)
         print("Ralph Setup Test Results:")
         print(f"  Success: {results['success']}")
-        print(f"  ralph.sh exists: {results['ralph_sh_exists']}")
-        print(f"  ralph.sh executable: {results['ralph_sh_executable']}")
+        print(
+            f"  OpenCode commands available: {results['opencode_commands_available']}"
+        )
+        print(f"  Ralph skill exists: {results['ralph_skill_exists']}")
         print(f"  PRD exists: {results['prd_exists']}")
         print(f"  progress.txt exists: {results['progress_exists']}")
         print(

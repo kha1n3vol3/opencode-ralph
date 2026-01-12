@@ -33,19 +33,14 @@ def install_ralph_skill(target_dir: Path) -> bool:
 
         # Copy core Ralph files
         core_files = [
-            ("ralph.sh", target_scripts_dir / "ralph.sh"),
             ("prompt.md", target_scripts_dir / "prompt.md"),
             ("prd.json.example", target_dir / "prd.json.example"),
-            ("ralph-loop.sh", target_dir / "ralph-loop.sh"),
         ]
 
         for src_name, dst_path in core_files:
             src_path = source_dir / src_name
             if src_path.exists():
                 shutil.copy2(src_path, dst_path)
-                # Make ralph.sh executable
-                if src_name == "ralph.sh":
-                    dst_path.chmod(0o755)
 
         # Copy OpenCode command files
         opencode_src = source_dir / ".opencode" / "command"
@@ -161,10 +156,11 @@ After installing Ralph to your project, you get these OpenCode commands:
    # Edit prd.json with your user stories
    ```
 
-2. **Run Ralph:**
-   ```bash
-   ./scripts/ralph/ralph.sh [max_iterations]
-   ```
+ 2. **Run Ralph:**
+    ```bash
+    opencode /ralph-run [max_iterations]
+    # Or: @ralph run the autonomous development loop
+    ```
 
 ## How Ralph Works
 
@@ -180,7 +176,7 @@ After installing Ralph to your project, you get these OpenCode commands:
 
 ## Key Files
 
-- `scripts/ralph/ralph.sh` - Main Ralph loop script
+
 - `scripts/ralph/prompt.md` - OpenCode agent instructions
 - `prd.json` - Product Requirements Document
 - `progress.txt` - Agent memory across iterations
@@ -237,12 +233,9 @@ if __name__ == "__main__":
         if success:
             print(f"✓ Ralph skill installed to {target_path}")
             print("  Files copied:")
-            print("    - scripts/ralph/ralph.sh (executable)")
             print("    - scripts/ralph/prompt.md")
             print("    - .opencode/command/*.md")
-            print("    - skills/ralph/SKILL.md")
-            print("    - skills/prd/SKILL.md")
+            print("    - .opencode/skill/ralph/SKILL.md")
             print("    - prd.json.example")
-            print("    - ralph-loop.sh")
         else:
             print(f"✗ Failed to install Ralph skill to {target_path}")

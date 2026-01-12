@@ -43,7 +43,9 @@ Ralph is an autonomous AI agent loop that runs OpenCode repeatedly until all PRD
 
 5. **Run Ralph to verify setup:**
    ```bash
-   ./ralph.sh 1  # Run one iteration
+   # Use OpenCode directly
+   opencode /ralph-run 1  # Run one iteration via Ralph subagent
+   # Or invoke via @mention: @ralph run the autonomous development loop
    ```
    
    Expected behavior:
@@ -58,12 +60,12 @@ Ralph is an autonomous AI agent loop that runs OpenCode repeatedly until all PRD
 
 - **OpenCode not found**: Install via `npm install -g opencode` or follow [opencode.ai](https://opencode.ai)
 - **jq not found**: Install via package manager (`brew install jq`, `apt-get install jq`, etc.)
-- **Permission denied on ralph.sh**: Run `chmod +x ralph.sh`
+- **Permission denied on scripts**: Ensure OpenCode CLI is executable
 - **PRD validation errors**: Use `/ralph-validate` command or `python scripts/ralph/validate_prd.py`
 
 ## OpenCode Integration
 
-Ralph now uses OpenCode tools instead of Amp. The `ralph.sh` script pipes `prompt.md` to `opencode run`. The prompt contains detailed instructions for the OpenCode agent, including tool usage and quality gates.
+Ralph now uses OpenCode tools instead of Amp. Use OpenCode agents directly via `@ralph` or `/ralph-run` command. The Ralph skill contains detailed instructions for the OpenCode agent, including tool usage and quality gates.
 
 ## OpenCode Agent Configuration
 
@@ -143,9 +145,6 @@ cd flowchart && npm run build
 # Run Ralph via @mention (recommended)
 @ralph start development loop
 
-# Alternative: Use legacy bash script (deprecated)
-./ralph.sh [max_iterations]
-
 # Run Python quality checks (if working on Python projects)
 uv run pytest tdd/ -v
 uv run ruff check . --fix
@@ -154,11 +153,13 @@ uv run ruff format .
 
 ## Key Files
 
-- `ralph.sh` - The bash loop that spawns fresh OpenCode agents
+- `.opencode/skill/ralph/SKILL.md` - Ralph skill defining autonomous development loop
+- `.opencode/agent/ralph.md` - Ralph orchestrator subagent (invokable via @ralph)
+- `.opencode/agent/ralph-worker.md` - Hidden worker subagent for story implementation
 - `prompt.md` - Instructions given to each OpenCode agent (detailed tool usage)
 - `prd.json.example` - Example PRD format
 - `flowchart/` - Interactive React Flow diagram explaining how Ralph works
-- `scripts/ralph/validate_prd.py` - PRD validation utility
+- `scripts/ralph/validate_prd.py` - PRD validation utility (legacy, also uses OpenCode native validation)
 - `tdd/test_ralph_opencode.py` - TDD tests for Ralph core functionality
 
 ## Python Environment
@@ -240,7 +241,7 @@ uv run ruff format .
 Ralph + OpenCode workflow has been demonstrated to work:
 
 ### ✅ Verified Components
-1. **OpenCode CLI Integration** - `ralph.sh` pipes `prompt.md` to `opencode run`
+1. **OpenCode CLI Integration** - Ralph skill loads via OpenCode skill tool, subagent invocation via `@ralph`
 2. **Tool Usage** - Ralph agents use OpenCode tools (Read, Edit, Write, Bash, Glob, Grep, Task, Skill)
 3. **PRD Validation** - `scripts/ralph/validate_prd.py` validates PRD structure
 4. **Commands** - 5 Ralph commands created in `.opencode/command/`:
@@ -268,22 +269,23 @@ Ralph has been redesigned for pure OpenCode integration:
 
 ### 🔧 Example Usage
 ```bash
-# Manual Ralph loop (alternative to ralph.sh)
-./ralph-loop.sh 20 "COMPLETE" "Build a Flask API with tests"
+# Invoke Ralph via @mention (recommended)
+@ralph start development loop
 
-# Run demonstration
-python3 demonstrate-ralph-opencode.py
+# Or use command
+/ralph-run 5  # Run 5 iterations maximum
 
 # Test integration
 uv run pytest tests/ -m integration -v
+
+# Run quality gates
+/ralph-quality
 ```
 
 ### 📁 Key Files Demonstrated
-- `ralph.sh` - Main Ralph loop using `opencode run`
 - `prompt.md` - OpenCode agent instructions
-- `ralph-loop.sh` - Example bash implementation
-- `demonstrate-ralph-opencode.py` - Full workflow demonstration
-- `.opencode/plugin/ralph.js` - Plugin stub for future extension
+- `.opencode/skill/ralph/SKILL.md` - Ralph skill guiding autonomous development
+- `.opencode/agent/ralph.md` - Ralph orchestrator subagent (invokable via @ralph)
 
 ### 🚀 Next Steps
 1. **Polish Commands** - Enhance command functionality

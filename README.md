@@ -191,7 +191,6 @@ If quality checks fail, the story is not marked complete.
 
 | File | Purpose |
 |------|---------|
-| `ralph.sh` | **DEPRECATED** - Legacy bash loop (use OpenCode agents instead) |
 | `prompt.md` | Detailed instructions for OpenCode agents (tool usage, quality gates) |
 | `prd.json` | Product Requirements Document with user stories and completion status |
 | `prd.json.example` | Example PRD format |
