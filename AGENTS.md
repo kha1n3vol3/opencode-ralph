@@ -213,6 +213,46 @@ Ralph includes custom OpenCode commands for common tasks:
 
 Commands are defined in `.opencode/command/` directory.
 
+## Demonstration Results
+
+The Ralph OpenCode demonstration successfully validated the autonomous development workflow:
+
+### ✅ What Was Demonstrated
+1. **Ralph Orchestrator-Worker Pattern**: Ralph subagent (`@ralph`) loads Ralph skill, validates PRD, spawns worker subagents
+2. **Story Implementation**: Worker agents implement single user stories with clean context isolation
+3. **Quality Gates**: Tests, linting, formatting pass before commits
+4. **PRD Progression**: Stories marked `passes: true` upon completion
+5. **Progress Tracking**: `progress.txt` accumulates learnings across iterations
+
+### 📊 Demonstration Metrics
+- **US-001**: Created `demonstrations/demo-README.md` with usage instructions
+- **US-002**: Created `scripts/demo-ralph-workflow.py` validation script
+- **US-003**: Updated AGENTS.md with demonstration results (this section)
+- **All 14 TDD tests pass**, ruff linting/formatting clean
+
+### 🚀 Key Learnings
+- **OpenCode Native Integration**: Ralph uses pure OpenCode tools (read/write/edit/todowrite/todoread)
+- **jq for PRD Processing**: Replaces Python scripts with `jq` commands via bash tool
+- **Command vs TUI Usage**: `/ralph-*` commands work in OpenCode TUI, not directly in CLI
+- **Multiple Ralph Instances**: Use different `branchName` in PRD; Ralph archives previous work to `archive/`
+- **Worker Context Isolation**: Task tool spawns worker subagents with clean context per story
+
+### 🔧 Correct Usage
+```bash
+# In OpenCode TUI (recommended)
+@ralph run the autonomous development loop
+# or
+/ralph-run 5
+
+# From terminal (alternative)
+opencode run --agent ralph "run the autonomous development loop"
+```
+
+### ⚠️ Common Issues
+- **`opencode /ralph-status` fails**: Custom commands only work in TUI, not CLI
+- **Subagent warning**: "agent 'ralph' is a subagent, not a primary agent" - normal, Ralph is designed as subagent
+- **Multiple Ralph instances**: Use separate branches with unique `branchName` in PRD
+
 ## Testing
 
 ### Unit Tests

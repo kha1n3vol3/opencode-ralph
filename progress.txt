@@ -19,3 +19,18 @@
   - Use `# noqa: E402` to suppress ruff import ordering errors
   - Ralph validation correctly identifies missing required fields and invalid user story structure
 ---
+
+## [2026-01-12 16:44:51] - US-002
+- Implemented Add demonstration script
+- **Learnings for future iterations:**
+  - Worker completed successfully
+---
+
+## 2026-01-12 17:00:00 - US-003
+- Updated AGENTS.md with demonstration results section
+- Documented Ralph orchestration-worker pattern and OpenCode native integration
+- **Learnings for future iterations:**
+  - Multiple Ralph instances use different `branchName` in PRD for isolation
+  - Custom commands (`/ralph-*`) work only in OpenCode TUI, not CLI
+  - Ralph subagent warning "agent 'ralph' is a subagent, not a primary agent" is normal design
+---
