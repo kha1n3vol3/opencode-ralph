@@ -55,62 +55,31 @@ def install_ralph_skill(target_dir: Path) -> bool:
                     shutil.copy2(cmd_file, target_opencode_dir / cmd_file.name)
 
         # Create OpenCode skill file in .opencode/skill/ralph/SKILL.md
-        skill_content = """---
+        # Read skill template from this project
+        skill_template_path = source_dir / "scripts" / "ralph" / "skill_template.md"
+        if skill_template_path.exists():
+            skill_content = skill_template_path.read_text()
+        else:
+            # Fallback to basic skill content if template not found
+            skill_content = """---
 name: ralph
-description: "Use Ralph (autonomous AI agent loop) with OpenCode. Ralph runs OpenCode agents repeatedly until all PRD items are complete. Each iteration is a fresh OpenCode agent with clean context. Triggers on: run ralph, start ralph loop, use ralph for this project, set up ralph."
+description: "Ralph autonomous AI agent loop for OpenCode. Runs iterative development cycles until all PRD stories are complete."
+license: MIT
+compatibility: opencode
 ---
-
-# Ralph OpenCode Skill
-
-Ralph is an autonomous AI agent loop that runs OpenCode repeatedly until all PRD items are complete.
-
-## Available Commands
-
-After installing Ralph, you get these OpenCode commands:
-
-- `/ralph-run` - Run Ralph loop with optional max iterations
-- `/ralph-validate` - Validate PRD.json structure
-- `/ralph-status` - Check current Ralph status and progress
-- `/ralph-quality` - Run quality gates (tests, linting, formatting)
-- `/ralph-test-complete` - Test COMPLETE signal detection
-
-## Quick Start
-
-1. **Create a PRD:**
-   ```bash
-   # Copy prd.json.example to prd.json and edit
-   cp prd.json.example prd.json
-   ```
-
-2. **Run Ralph:**
-   ```bash
-   ./scripts/ralph/ralph.sh [max_iterations]
-   ```
-
-## Key Files
-
-- `scripts/ralph/ralph.sh` - Main Ralph loop script
-- `scripts/ralph/prompt.md` - OpenCode agent instructions
-- `prd.json` - Product Requirements Document
-- `progress.txt` - Agent memory across iterations
-- `.opencode/command/` - Ralph OpenCode commands
-- `.opencode/skill/ralph/` - Ralph skill definition
-
-## Source
-
-Repository: [opencode-ralph](https://github.com/kha1n3vol3/opencode-ralph)
-
-Contains full implementation, tests, and examples.
-"""
+# Ralph Autonomous Development Loop
+Basic Ralph skill - template file not found."""
 
         skill_file = target_skill_dir / "SKILL.md"
         skill_file.write_text(skill_content)
 
-        # Copy Python utilities
+        # Copy Python utilities and skill template
         scripts_src = source_dir / "scripts" / "ralph"
         if scripts_src.exists():
             for py_file in scripts_src.iterdir():
-                if py_file.is_file() and py_file.suffix == ".py":
+                if py_file.is_file() and (
+                    py_file.suffix == ".py" or py_file.name == "skill_template.md"
+                ):
                     shutil.copy2(py_file, target_scripts_dir / py_file.name)
 
         # Copy validation script

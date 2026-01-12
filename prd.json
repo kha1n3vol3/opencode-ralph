@@ -61,8 +61,8 @@
         "Commit changes with message 'feat: US-004 - Create OpenCode skill for Ralph loop'"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Created .opencode/skill/ralph/SKILL.md with YAML frontmatter and detailed orchestrator instructions. Converted prompt.md logic to skill format with sections: Prerequisites, Orchestrator Workflow, Safeguards, Quality Gates, Progress Tracking. Included completion detection (COMPLETE signal), stagnation detection (3 failures), max iterations safeguard. Skill appears in 'opencode debug skill' output. Updated install.py to use new skill template (skill_template.md). All tests pass."
     },
     {
       "id": "US-005",
