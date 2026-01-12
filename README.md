@@ -2,105 +2,187 @@
 
 ![Ralph](ralph.webp)
 
-Ralph is an autonomous AI agent loop that runs [Amp](https://ampcode.com) repeatedly until all PRD items are complete. Each iteration is a fresh Amp instance with clean context. Memory persists via git history, `progress.txt`, and `prd.json`.
+Ralph is an autonomous AI agent loop that runs [OpenCode](https://opencode.ai) repeatedly until all PRD items are complete. Each iteration is a fresh OpenCode agent with clean context. Memory persists via git history, `progress.txt`, and `prd.json`.
 
 Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 
-[Read my in-depth article on how I use Ralph](https://x.com/ryancarson/status/2008548371712135632)
+## Architecture: Orchestrator-Worker Pattern
+
+Ralph uses an **orchestrator-worker pattern** with two specialized OpenCode agents:
+
+### Primary Orchestrator Agent (`ralph.md`)
+- **Mode**: `primary` with full tool access (including `task` and `skill`)
+- **Role**: Loads Ralph skill, validates prerequisites, spawns worker subagents
+- **Location**: `.opencode/agent/ralph.md`
+- **Behavior**: Implements orchestrator loop with stagnation detection and quality gates
+
+### Worker Subagent (`ralph-worker.md`)
+- **Mode**: `subagent` with `hidden: true` (restricted tools - no `task`)
+- **Role**: Implements single user story, reads `prompt.md`, runs quality checks
+- **Location**: `.opencode/agent/ralph-worker.md`
+- **Behavior**: Returns SUCCESS/FAILURE signal to orchestrator
+
+This architecture provides **clean context isolation** per user story while maintaining persistence via git commits and file updates.
+
+## Key Features
+
+- **Autonomous Development Loop**: Runs OpenCode agents until all PRD stories are complete
+- **Orchestrator-Worker Pattern**: Clean context isolation with fresh subagents per story
+- **Quality Gates**: Automated testing, linting, and formatting checks
+- **Progress Tracking**: Append-only `progress.txt` with learnings and patterns
+- **PRD-Driven**: JSON-based Product Requirements Document guides development
+- **Git Integration**: Automatic commits with story IDs and branch management
 
 ## Prerequisites
 
-- [Amp CLI](https://ampcode.com) installed and authenticated
-- `jq` installed (`brew install jq` on macOS)
+- [OpenCode CLI](https://opencode.ai) installed and authenticated
+- `jq` installed (`brew install jq` on macOS, `apt-get install jq` on Ubuntu)
 - A git repository for your project
 
 ## Setup
 
-### Option 1: Copy to your project
+### Prerequisites Verification
 
-Copy the ralph files into your project:
-
-```bash
-# From your project root
-mkdir -p scripts/ralph
-cp /path/to/ralph/ralph.sh scripts/ralph/
-cp /path/to/ralph/prompt.md scripts/ralph/
-chmod +x scripts/ralph/ralph.sh
-```
-
-### Option 2: Install skills globally
-
-Copy the skills to your Amp config for use across all projects:
+First, verify OpenCode CLI and jq are installed:
 
 ```bash
-cp -r skills/prd ~/.config/amp/skills/
-cp -r skills/ralph ~/.config/amp/skills/
+# Check OpenCode CLI
+opencode --version
+
+# Check jq
+jq --version
 ```
 
-### Configure Amp auto-handoff (recommended)
+### Installation Steps
 
-Add to `~/.config/amp/settings.json`:
+1. **Clone Ralph repository or copy files:**
+   ```bash
+   # Option 1: Clone as subdirectory
+   git clone https://github.com/kha1n3vol3/opencode-ralph.git
+   cd opencode-ralph
+   
+   # Option 2: Install via Python script
+   python3 -c "from ralph.install import install_ralph_skill; from pathlib import Path; install_ralph_skill(Path('.'))"
+   ```
 
-```json
-{
-  "amp.experimental.autoHandoff": { "context": 90 }
-}
-```
+2. **Verify OpenCode agent integration:**
+   ```bash
+   opencode debug skill | grep -i ralph  # Should show Ralph skill
+   ```
 
-This enables automatic handoff when context fills up, allowing Ralph to handle large stories that exceed a single context window.
+3. **Create PRD file:**
+   ```bash
+   cp prd.json.example prd.json
+   # Edit prd.json with your user stories
+   ```
+
+4. **Run Ralph to verify setup:**
+   ```bash
+   ./ralph.sh 1  # Run one iteration
+   ```
+   
+   Expected behavior:
+   - Ralph creates `progress.txt` if not exists
+   - Picks highest priority story from `prd.json`
+   - Runs OpenCode agent to implement the story
+   - Runs quality gates (tests, linting, formatting)
+   - Commits changes with story ID in message
+   - Updates `prd.json` with `passes: true` for completed story
+
+### OpenCode Agent Configuration
+
+Ralph uses two OpenCode agent configurations (already included in the repository):
+
+- **Primary Orchestrator**: `.opencode/agent/ralph.md` - Spawns worker subagents, manages iterations
+- **Worker Subagent**: `.opencode/agent/ralph-worker.md` - Implements single user stories (hidden)
+
+The Ralph skill (`.opencode/skill/ralph/SKILL.md`) contains detailed orchestrator instructions.
 
 ## Workflow
 
-### 1. Create a PRD
+### 1. Create PRD
 
-Use the PRD skill to generate a detailed requirements document:
+Create a `prd.json` file in your project root (use `prd.json.example` as template):
 
+```json
+{
+  "project": "MyProject",
+  "branchName": "ralph/feature-name",
+  "description": "Feature description",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add database migration",
+      "description": "As a developer, I need to store user preferences",
+      "acceptanceCriteria": [
+        "Create migration file with timestamp",
+        "Add preferences column to users table",
+        "Run migration successfully"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
 ```
-Load the prd skill and create a PRD for [your feature description]
-```
 
-Answer the clarifying questions. The skill saves output to `tasks/prd-[feature-name].md`.
-
-### 2. Convert PRD to Ralph format
-
-Use the Ralph skill to convert the markdown PRD to JSON:
-
-```
-Load the ralph skill and convert tasks/prd-[feature-name].md to prd.json
-```
-
-This creates `prd.json` with user stories structured for autonomous execution.
-
-### 3. Run Ralph
+### 2. Run Ralph Loop
 
 ```bash
-./scripts/ralph/ralph.sh [max_iterations]
+./ralph.sh [max_iterations]
 ```
 
-Default is 10 iterations.
+Default max iterations: 10. Use `./ralph.sh 5` for 5 iterations.
 
-Ralph will:
-1. Create a feature branch (from PRD `branchName`)
-2. Pick the highest priority story where `passes: false`
-3. Implement that single story
-4. Run quality checks (typecheck, tests)
-5. Commit if checks pass
-6. Update `prd.json` to mark story as `passes: true`
-7. Append learnings to `progress.txt`
-8. Repeat until all stories pass or max iterations reached
+### 3. Orchestrator-Worker Execution Flow
+
+1. **Orchestrator Initialization**:
+   - Primary agent (`ralph.md`) loads Ralph skill
+   - Validates prerequisites (PRD, progress.txt, core modules)
+   - Checks if all stories complete → outputs `<promise>COMPLETE</promise>` if done
+
+2. **Main Loop** (while iterations < max_iterations):
+   - **Get next story**: Highest priority incomplete story from PRD
+   - **Stagnation check**: Skip story after 3 failures
+   - **Spawn worker**: Use Task tool to spawn `ralph-worker.md` subagent
+   - **Worker execution**: Implements single story using `prompt.md` instructions
+   - **Quality gates**: Runs tests, linting, formatting (project-specific)
+   - **Result handling**: Worker returns SUCCESS or FAILURE
+   - **Update PRD**: Mark story complete on SUCCESS
+   - **Progress tracking**: Append learnings to `progress.txt`
+
+3. **Exit Conditions**:
+   - **Success**: All stories complete → `<promise>COMPLETE</promise>`
+   - **Partial**: Max iterations reached → reports remaining stories
+   - **Error**: Critical failure → error message with details
+
+### 4. Quality Gates
+
+Ralph enforces quality checks via the worker agent:
+
+- **Tests**: `uv run pytest tests/ -v` (must pass for Python projects)
+- **Linting**: `uv run ruff check . --fix` (auto-fix safe issues)
+- **Formatting**: `uv run ruff format .` (ensure consistent style)
+- **Type checking**: `uv run ty .` (if project uses type hints)
+
+If quality checks fail, the story is not marked complete.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `ralph.sh` | The bash loop that spawns fresh Amp instances |
-| `prompt.md` | Instructions given to each Amp instance |
-| `prd.json` | User stories with `passes` status (the task list) |
-| `prd.json.example` | Example PRD format for reference |
-| `progress.txt` | Append-only learnings for future iterations |
-| `skills/prd/` | Skill for generating PRDs |
-| `skills/ralph/` | Skill for converting PRDs to JSON |
-| `flowchart/` | Interactive visualization of how Ralph works |
+| `ralph.sh` | Bash loop that pipes `prompt.md` to `opencode run` |
+| `prompt.md` | Detailed instructions for OpenCode agents (tool usage, quality gates) |
+| `prd.json` | Product Requirements Document with user stories and completion status |
+| `prd.json.example` | Example PRD format |
+| `progress.txt` | Append-only log with learnings and codebase patterns |
+| `.opencode/agent/ralph.md` | Primary orchestrator agent (spawns workers) |
+| `.opencode/agent/ralph-worker.md` | Hidden worker subagent (implements single stories) |
+| `.opencode/skill/ralph/SKILL.md` | Ralph skill with orchestrator instructions |
+| `scripts/ralph/core.py` | Core logic for PRD processing and progress tracking |
+| `scripts/ralph/validate_prd.py` | PRD validation utility |
+| `flowchart/` | Interactive React Flow diagram explaining Ralph workflow |
 
 ## Flowchart
 
@@ -118,51 +200,53 @@ npm run dev
 
 ## Critical Concepts
 
-### Each Iteration = Fresh Context
+### Orchestrator-Worker Pattern
 
-Each iteration spawns a **new Amp instance** with clean context. The only memory between iterations is:
-- Git history (commits from previous iterations)
-- `progress.txt` (learnings and context)
-- `prd.json` (which stories are done)
+Ralph uses an **orchestrator-worker pattern** with clean context isolation:
 
-### Small Tasks
+- **Primary Orchestrator**: Manages the loop, spawns workers, tracks progress
+- **Worker Subagents**: Fresh context per story implementation (hidden subagents)
+- **Context Isolation**: Each worker gets clean context via OpenCode Task tool
+- **Persistence**: Memory via git commits, PRD updates, and progress.txt
 
-Each PRD item should be small enough to complete in one context window. If a task is too big, the LLM runs out of context before finishing and produces poor code.
+This pattern prevents context pollution and allows each story to be implemented independently.
 
-Right-sized stories:
+### Small, Focused Stories
+
+Each PRD item should be small enough to complete in one context window (2-3 sentences to describe). Oversized stories cause poor results.
+
+**Right-sized stories:**
 - Add a database column and migration
-- Add a UI component to an existing page
-- Update a server action with new logic
-- Add a filter dropdown to a list
+- Create a new API endpoint with tests
+- Add a UI component to existing page
+- Update validation logic with error handling
 
-Too big (split these):
+**Too big (split these):**
 - "Build the entire dashboard"
-- "Add authentication"
-- "Refactor the API"
+- "Add authentication system"
+- "Refactor the entire API layer"
 
 ### AGENTS.md Updates Are Critical
 
-After each iteration, Ralph updates the relevant `AGENTS.md` files with learnings. This is key because Amp automatically reads these files, so future iterations (and future human developers) benefit from discovered patterns, gotchas, and conventions.
+After each iteration, Ralph updates relevant `AGENTS.md` files with learnings. OpenCode agents automatically read these files, so future iterations benefit from discovered patterns.
 
-Examples of what to add to AGENTS.md:
+**Examples of what to add to AGENTS.md:**
 - Patterns discovered ("this codebase uses X for Y")
 - Gotchas ("do not forget to update Z when changing W")
 - Useful context ("the settings panel is in component X")
+- API conventions ("endpoints follow pattern /api/v1/resource")
 
-### Feedback Loops
+### Quality Gates as Feedback Loops
 
-Ralph only works if there are feedback loops:
-- Typecheck catches type errors
-- Tests verify behavior
-- CI must stay green (broken code compounds across iterations)
+Ralph requires robust feedback loops:
+- **Tests must pass**: Automated test suite catches regressions
+- **Linting and formatting**: Consistent code style across iterations
+- **Type checking**: Catches type errors before they compound
+- **CI must stay green**: Broken code blocks future iterations
 
-### Browser Verification for UI Stories
+### Stop Condition Detection
 
-Frontend stories must include "Verify in browser using dev-browser skill" in acceptance criteria. Ralph will use the dev-browser skill to navigate to the page, interact with the UI, and confirm changes work.
-
-### Stop Condition
-
-When all stories have `passes: true`, Ralph outputs `<promise>COMPLETE</promise>` and the loop exits.
+When all stories have `passes: true`, the orchestrator outputs `<promise>COMPLETE</promise>` and the loop exits. The COMPLETE signal is detected by the bash script (`ralph.sh`) which stops execution.
 
 ## Debugging
 
@@ -193,4 +277,5 @@ Ralph automatically archives previous runs when you start a new feature (differe
 ## References
 
 - [Geoffrey Huntley's Ralph article](https://ghuntley.com/ralph/)
-- [Amp documentation](https://ampcode.com/manual)
+- [OpenCode documentation](https://opencode.ai)
+- [Ralph OpenCode port repository](https://github.com/kha1n3vol3/opencode-ralph)
