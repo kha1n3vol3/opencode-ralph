@@ -194,6 +194,7 @@ npm run dev
  ## Patterns
 
 - Each iteration spawns a fresh OpenCode agent with clean context
+- Ralph uses orchestrator-worker pattern: orchestrator subagent spawns worker subagents for clean context isolation
 - Memory persists via git history, `progress.txt`, and `prd.json`
 - Stories should be small enough to complete in one context window
 - Always update AGENTS.md with discovered patterns for future iterations

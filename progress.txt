@@ -1,0 +1,13 @@
+## Codebase Patterns
+- Use OpenCode native tools (read/write/edit/todowrite/todoread) for all operations
+- PRD processing uses jq commands via bash tool
+- Ralph orchestrator-worker pattern uses Task tool with subagent type "ralph"
+- Python projects use UV for environment management and quality gates
+## 2026-01-12 15:45:00 - US-001
+- Created demonstration README file (demonstrations/demo-README.md)
+- Updated AGENTS.md with orchestrator-worker pattern
+- **Learnings for future iterations:**
+  - OpenCode agents use native tools for PRD operations
+  - Ralph orchestrator-worker pattern provides clean context isolation
+  - Quality gates (tests, linting, formatting) must pass before commit
+---
