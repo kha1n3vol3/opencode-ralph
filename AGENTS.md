@@ -65,6 +65,24 @@ Ralph is an autonomous AI agent loop that runs OpenCode repeatedly until all PRD
 
 Ralph now uses OpenCode tools instead of Amp. The `ralph.sh` script pipes `prompt.md` to `opencode run`. The prompt contains detailed instructions for the OpenCode agent, including tool usage and quality gates.
 
+## OpenCode Agent Configuration
+
+Ralph uses two OpenCode agent configurations:
+
+### Primary Orchestrator (`.opencode/agent/ralph.md`)
+- **Mode**: `primary` with full tool access (including Task and Skill)
+- **Role**: Loads Ralph skill, validates prerequisites, spawns worker subagents
+- **Frontmatter**: `mode: primary`, `model: anthropic/claude-3-5-sonnet-20241022`
+- **Behavior**: Implements orchestrator loop with stagnation detection and quality gates
+
+### Worker Subagent (`.opencode/agent/ralph-worker.md`)
+- **Mode**: `subagent` with `hidden: true`
+- **Role**: Implements single user story, reads `prompt.md`, runs quality checks
+- **Frontmatter**: `mode: subagent`, `hidden: true`, restricted tools (no Task)
+- **Behavior**: Returns SUCCESS/FAILURE signal to orchestrator
+
+These agents implement the orchestrator-worker pattern with clean context isolation per US-002 research.
+
 ## Commands
 
 ```bash
