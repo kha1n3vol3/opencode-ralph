@@ -4,6 +4,63 @@
 
 Ralph is an autonomous AI agent loop that runs OpenCode repeatedly until all PRD items are complete. Each iteration is a fresh OpenCode agent with clean context.
 
+## Setup
+
+### Prerequisites
+
+- [OpenCode CLI](https://opencode.ai) installed and authenticated
+- `jq` installed (`brew install jq` on macOS, `apt-get install jq` on Ubuntu)
+- A git repository for your project
+
+### Installation Steps
+
+1. **Clone Ralph repository or copy files:**
+   ```bash
+   # Option 1: Clone as subdirectory
+   git clone https://github.com/kha1n3vol3/opencode-ralph.git
+   cd opencode-ralph
+   
+   # Option 2: Install via Python script
+   python3 -c "from ralph.install import install_ralph_skill; from pathlib import Path; install_ralph_skill(Path('.'))"
+   ```
+
+2. **Verify OpenCode CLI installation:**
+   ```bash
+   opencode --version
+   opencode debug skill | grep -i ralph  # Should show Ralph skill
+   ```
+
+3. **Verify jq installation:**
+   ```bash
+   jq --version
+   ```
+
+4. **Create PRD file:**
+   ```bash
+   cp prd.json.example prd.json
+   # Edit prd.json with your user stories
+   ```
+
+5. **Run Ralph to verify setup:**
+   ```bash
+   ./ralph.sh 1  # Run one iteration
+   ```
+   
+   Expected behavior:
+   - Ralph creates `progress.txt` if not exists
+   - Picks highest priority story from `prd.json`
+   - Runs OpenCode agent to implement the story
+   - Runs quality gates (tests, linting, formatting)
+   - Commits changes with story ID in message
+   - Updates `prd.json` with `passes: true` for completed story
+
+### Troubleshooting
+
+- **OpenCode not found**: Install via `npm install -g opencode` or follow [opencode.ai](https://opencode.ai)
+- **jq not found**: Install via package manager (`brew install jq`, `apt-get install jq`, etc.)
+- **Permission denied on ralph.sh**: Run `chmod +x ralph.sh`
+- **PRD validation errors**: Use `/ralph-validate` command or `python scripts/ralph/validate_prd.py`
+
 ## OpenCode Integration
 
 Ralph now uses OpenCode tools instead of Amp. The `ralph.sh` script pipes `prompt.md` to `opencode run`. The prompt contains detailed instructions for the OpenCode agent, including tool usage and quality gates.

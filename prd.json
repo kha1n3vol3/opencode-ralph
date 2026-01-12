@@ -15,8 +15,8 @@
         "Commit changes with message 'feat: US-001 - Update AGENTS.md with setup instructions'"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "AGENTS.md updated with setup instructions including prerequisites, verification steps, and example PRD creation."
     }
   ]
 }
