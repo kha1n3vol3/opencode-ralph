@@ -1,0 +1,22 @@
+{
+  "project": "Ralph",
+  "branchName": "ralph/setup-test",
+  "description": "Test Ralph setup and verify it works",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Update AGENTS.md with Ralph setup instructions",
+      "description": "As a developer, I want clear setup instructions in AGENTS.md so future contributors know how to use Ralph.",
+      "acceptanceCriteria": [
+        "Add '## Setup' section to AGENTS.md with prerequisites and steps",
+        "Include verification steps for OpenCode CLI and jq installation",
+        "Add example PRD creation steps",
+        "Run Ralph script successfully to verify setup",
+        "Commit changes with message 'feat: US-001 - Update AGENTS.md with setup instructions'"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
