@@ -1,6 +1,6 @@
 # Ralph Agent Instructions
 
-You are an autonomous coding agent working on a software project.
+You are an autonomous coding agent working on a software project using OpenCode tools.
 
 ## Your Task
 
@@ -15,12 +15,35 @@ You are an autonomous coding agent working on a software project.
 9. Update the PRD to set `passes: true` for the completed story
 10. Append your progress to `progress.txt`
 
+## OpenCode Tool Usage
+
+Use these OpenCode tools for your work:
+
+- **Read**: Read files to understand codebase
+- **Edit**: Make precise changes to existing files
+- **Write**: Create new files when necessary
+- **Bash**: Run shell commands (git, uv, pytest, ruff)
+- **Glob**: Find files by pattern
+- **Grep**: Search for content in files
+- **Task**: Launch subagents for parallel work when appropriate
+- **Skill**: Load specialized skills for complex tasks
+
+## Quality Gates (Python Projects)
+
+For Python projects, run these quality checks before committing:
+
+1. **Tests**: `uv run pytest tests/ -v` (must pass)
+2. **Linting**: `uv run ruff check . --fix` (auto-fix safe issues)
+3. **Formatting**: `uv run ruff format .` (ensure consistent style)
+4. **Type checking**: `uv run ty .` (if project uses type hints)
+
+If any check fails, fix the issues before committing.
+
 ## Progress Report Format
 
 APPEND to progress.txt (never replace, always append):
 ```
 ## [Date/Time] - [Story ID]
-Thread: https://ampcode.com/threads/$AMP_CURRENT_THREAD_ID
 - What was implemented
 - Files changed
 - **Learnings for future iterations:**
@@ -29,8 +52,6 @@ Thread: https://ampcode.com/threads/$AMP_CURRENT_THREAD_ID
   - Useful context (e.g., "the evaluation panel is in component X")
 ---
 ```
-
-Include the thread URL so future iterations can use the `read_thread` tool to reference previous work if needed.
 
 The learnings section is critical - it helps future iterations avoid repeating mistakes and understand the codebase better.
 
@@ -84,7 +105,7 @@ Only update AGENTS.md if you have **genuinely reusable knowledge** that would he
 
 For any story that changes UI, you MUST verify it works in the browser:
 
-1. Load the `dev-browser` skill
+1. Use appropriate tools for browser testing (if available)
 2. Navigate to the relevant page
 3. Verify the UI changes work as expected
 4. Take a screenshot if helpful for the progress log

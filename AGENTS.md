@@ -2,27 +2,56 @@
 
 ## Overview
 
-Ralph is an autonomous AI agent loop that runs Amp repeatedly until all PRD items are complete. Each iteration is a fresh Amp instance with clean context.
+Ralph is an autonomous AI agent loop that runs OpenCode repeatedly until all PRD items are complete. Each iteration is a fresh OpenCode agent with clean context.
+
+## OpenCode Integration
+
+Ralph now uses OpenCode tools instead of Amp. The `ralph.sh` script pipes `prompt.md` to `opencode run`. The prompt contains detailed instructions for the OpenCode agent, including tool usage and quality gates.
 
 ## Commands
 
 ```bash
-# Run the flowchart dev server
+# Run the flowchart dev server (optional visualization)
 cd flowchart && npm run dev
 
 # Build the flowchart
 cd flowchart && npm run build
 
-# Run Ralph (from your project that has prd.json)
+# Run Ralph (requires prd.json in current directory)
 ./ralph.sh [max_iterations]
+
+# Run Python quality checks (if working on Python projects)
+uv run pytest tdd/ -v
+uv run ruff check . --fix
+uv run ruff format .
 ```
 
 ## Key Files
 
-- `ralph.sh` - The bash loop that spawns fresh Amp instances
-- `prompt.md` - Instructions given to each Amp instance
+- `ralph.sh` - The bash loop that spawns fresh OpenCode agents
+- `prompt.md` - Instructions given to each OpenCode agent (detailed tool usage)
 - `prd.json.example` - Example PRD format
 - `flowchart/` - Interactive React Flow diagram explaining how Ralph works
+- `scripts/ralph/validate_prd.py` - PRD validation utility
+- `tdd/test_ralph_opencode.py` - TDD tests for Ralph core functionality
+
+## Python Environment
+
+For Python projects, Ralph uses UV for environment management:
+
+1. **Setup environment**:
+   ```bash
+   uv venv
+   uv pip install -r requirements.txt
+   ```
+
+2. **Quality gates** (run before committing):
+   - `uv run pytest tdd/ -v` (tests must pass)
+   - `uv run ruff check . --fix` (linting)
+   - `uv run ruff format .` (formatting)
+   - `uv run ty .` (type checking, if configured)
+
+See `prompt.md` for full agent instructions.
 
 ## Flowchart
 
@@ -37,7 +66,8 @@ npm run dev
 
 ## Patterns
 
-- Each iteration spawns a fresh Amp instance with clean context
+- Each iteration spawns a fresh OpenCode agent with clean context
 - Memory persists via git history, `progress.txt`, and `prd.json`
 - Stories should be small enough to complete in one context window
 - Always update AGENTS.md with discovered patterns for future iterations
+- Use OpenCode tools (Read, Edit, Write, Bash, Glob, Grep, Task, Skill) as described in prompt.md
