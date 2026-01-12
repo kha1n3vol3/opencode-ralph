@@ -166,6 +166,26 @@ This skill works with Ralph OpenCode commands:
 - `/ralph-quality` - Runs quality gates
 - `/ralph-test-complete` - Tests COMPLETE signal detection
 
+## Agent Definitions
+
+Ralph uses two OpenCode agent configurations:
+
+### Primary Orchestrator (ralph.md)
+- **Location**: `.opencode/agent/ralph.md`
+- **Mode**: `primary` with full tool access (including Task and Skill)
+- **Role**: Loads this skill, validates prerequisites, spawns worker subagents
+- **Frontmatter**: `mode: primary`, `model: anthropic/claude-3-5-sonnet-20241022`
+- **Behavior**: Implements orchestrator loop with stagnation detection and quality gates
+
+### Worker Subagent (ralph-worker.md)
+- **Location**: `.opencode/agent/ralph-worker.md`
+- **Mode**: `subagent` with `hidden: true`
+- **Role**: Implements single user story, reads `prompt.md`, runs quality checks
+- **Frontmatter**: `mode: subagent`, `hidden: true`, restricted tools (no Task)
+- **Behavior**: Returns SUCCESS/FAILURE signal to orchestrator
+
+These agents implement the orchestrator-worker pattern with clean context isolation per US-002 research.
+
 ## Output Signals
 
 ### Success Completion
