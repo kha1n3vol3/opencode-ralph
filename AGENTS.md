@@ -64,10 +64,47 @@ npm install
 npm run dev
 ```
 
-## Patterns
+ ## Patterns
 
 - Each iteration spawns a fresh OpenCode agent with clean context
 - Memory persists via git history, `progress.txt`, and `prd.json`
 - Stories should be small enough to complete in one context window
 - Always update AGENTS.md with discovered patterns for future iterations
 - Use OpenCode tools (Read, Edit, Write, Bash, Glob, Grep, Task, Skill) as described in prompt.md
+
+## OpenCode Commands for Ralph
+
+Ralph includes custom OpenCode commands for common tasks:
+
+- `/ralph-validate` - Validate PRD.json structure
+- `/ralph-run` - Run Ralph with optional max iterations (`/ralph-run 5`)
+- `/ralph-status` - Check current Ralph status and progress
+- `/ralph-quality` - Run quality gates (tests, linting, formatting)
+- `/ralph-test-complete` - Test command that outputs COMPLETE signal
+
+Commands are defined in `.opencode/command/` directory.
+
+## Testing
+
+### Unit Tests
+```bash
+uv run pytest tdd/ -v
+```
+
+### Integration Tests (slow - require OpenCode CLI)
+```bash
+# Run all tests including integration
+uv run pytest tests/ -v
+
+# Run only integration tests (marked with @pytest.mark.integration)
+uv run pytest tests/ -m integration -v
+
+# Skip slow integration tests
+uv run pytest tests/ -m "not integration" -v
+```
+
+### Quality Gates
+```bash
+uv run ruff check . --fix
+uv run ruff format .
+```
