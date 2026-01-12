@@ -108,3 +108,51 @@ uv run pytest tests/ -m "not integration" -v
 uv run ruff check . --fix
 uv run ruff format .
 ```
+
+## Production Demonstration
+
+Ralph + OpenCode workflow has been demonstrated to work:
+
+### ✅ Verified Components
+1. **OpenCode CLI Integration** - `ralph.sh` pipes `prompt.md` to `opencode run`
+2. **Tool Usage** - Ralph agents use OpenCode tools (Read, Edit, Write, Bash, Glob, Grep, Task, Skill)
+3. **PRD Validation** - `scripts/ralph/validate_prd.py` validates PRD structure
+4. **Commands** - 5 Ralph commands created in `.opencode/command/`:
+   - `/ralph-validate` - Validate PRD
+   - `/ralph-run` - Run Ralph loop
+   - `/ralph-status` - Check progress
+   - `/ralph-quality` - Run quality gates
+   - `/ralph-test-complete` - Test COMPLETE signal
+5. **COMPLETE Signal** - Ralph detects `<promise>COMPLETE</promise>` to exit loop
+6. **Integration Tests** - Tests use real OpenCode CLI (not mocks)
+
+### 🧪 Test Architecture
+- **Unit Tests**: PRD validation (3 passing tests)
+- **Integration Tests**: Ralph workflow with real OpenCode (marked `@pytest.mark.integration`)
+- **Test Markers**: `pytest.ini` defines `integration` and `slow` markers
+- **Quality Gates**: Tests, linting, formatting must pass
+
+### 🔧 Example Usage
+```bash
+# Manual Ralph loop (alternative to ralph.sh)
+./ralph-loop.sh 20 "COMPLETE" "Build a Flask API with tests"
+
+# Run demonstration
+python3 demonstrate-ralph-opencode.py
+
+# Test integration
+uv run pytest tests/ -m integration -v
+```
+
+### 📁 Key Files Demonstrated
+- `ralph.sh` - Main Ralph loop using `opencode run`
+- `prompt.md` - OpenCode agent instructions
+- `ralph-loop.sh` - Example bash implementation
+- `demonstrate-ralph-opencode.py` - Full workflow demonstration
+- `.opencode/plugin/ralph.js` - Plugin stub for future extension
+
+### 🚀 Next Steps
+1. **Polish Commands** - Enhance command functionality
+2. **Plugin Development** - Extend to full OpenCode plugin
+3. **Skill Creation** - Package as reusable OpenCode skill
+4. **Performance Optimization** - Reduce iteration overhead

@@ -14,8 +14,9 @@ if [ -z "$MAX_ITER" ] || [ -z "$COMPLETION_PROMISE" ] || [ -z "$PROMPT" ]; then
   exit 1
 fi
 
-# Optional: Specify model/agent (e.g., --model claude/opus)
-OPENCODE_OPTS="--model claude/sonnet"  # Adjust as needed
+# Optional: Specify model/agent via environment variable
+# Example: export OPENCODE_OPTS="--model anthropic/claude-3-5-sonnet-20241022"
+OPENCODE_OPTS="${OPENCODE_OPTS:-}"  # Use environment variable if set, else empty
 
 # Start the initial session
 echo "Starting initial iteration..."
