@@ -5,13 +5,11 @@ Shows how Ralph uses OpenCode for autonomous development.
 """
 
 import json
-import os
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
-import time
 
 
 def run_command(cmd, cwd=None, timeout=30, input_text=None):
@@ -199,7 +197,7 @@ class RalphOpenCodeDemo:
 
         prd_path = self.demo_dir / "prd.json"
         prd_path.write_text(json.dumps(prd_data, indent=2))
-        success(f"Created PRD with 1 user story")
+        success("Created PRD with 1 user story")
 
         # Create progress.txt
         progress_path = self.demo_dir / "progress.txt"
