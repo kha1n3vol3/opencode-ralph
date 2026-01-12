@@ -199,6 +199,7 @@ npm run dev
 - Stories should be small enough to complete in one context window
 - Always update AGENTS.md with discovered patterns for future iterations
 - Use OpenCode tools (Read, Edit, Write, Bash, Glob, Grep, Task, Skill) as described in prompt.md
+- For Python scripts importing local modules, add repo root to sys.path: `sys.path.insert(0, str(Path(__file__).parent.parent))` and use `# noqa: E402` for ruff
 
 ## OpenCode Commands for Ralph
 

@@ -11,3 +11,11 @@
   - Ralph orchestrator-worker pattern provides clean context isolation
   - Quality gates (tests, linting, formatting) must pass before commit
 ---
+## 2026-01-12 16:45:00 - US-002
+- Created demonstration script scripts/demo-ralph-workflow.py
+- Script creates test PRDs (valid and invalid) and runs Ralph validation using scripts/ralph/validate_prd.py
+- **Learnings for future iterations:**
+  - Python scripts that import local modules need repo root added to sys.path
+  - Use `# noqa: E402` to suppress ruff import ordering errors
+  - Ralph validation correctly identifies missing required fields and invalid user story structure
+---
