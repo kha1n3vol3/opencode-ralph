@@ -67,13 +67,14 @@ Ralph now uses OpenCode tools instead of Amp. The `ralph.sh` script pipes `promp
 
 ## OpenCode Agent Configuration
 
-Ralph uses two OpenCode agent configurations:
+Ralph uses two OpenCode agent configurations for the orchestrator-worker pattern:
 
-### Primary Orchestrator (`.opencode/agent/ralph.md`)
-- **Mode**: `primary` with full tool access (including Task and Skill)
+### Ralph Subagent (`.opencode/agent/ralph.md`)
+- **Mode**: `subagent` (invokable via `@ralph` or `/ralph-run`)
 - **Role**: Loads Ralph skill, validates prerequisites, spawns worker subagents
-- **Frontmatter**: `mode: primary`, `model: anthropic/claude-3-5-sonnet-20241022`
-- **Behavior**: Implements orchestrator loop with stagnation detection and quality gates
+- **Frontmatter**: `mode: subagent`, `model: anthropic/claude-3-5-sonnet-20241022`
+- **Tools**: Full access including Task, Skill, todowrite/todoread for state management
+- **Behavior**: Implements orchestrator loop with stagnation detection and quality gates using pure OpenCode tools
 
 ### Worker Subagent (`.opencode/agent/ralph-worker.md`)
 - **Mode**: `subagent` with `hidden: true`
@@ -82,6 +83,53 @@ Ralph uses two OpenCode agent configurations:
 - **Behavior**: Returns SUCCESS/FAILURE signal to orchestrator
 
 These agents implement the orchestrator-worker pattern with clean context isolation per US-002 research.
+
+## Idiomatic OpenCode Integration
+
+Ralph now uses **pure OpenCode native tools** instead of external Python scripts:
+
+### Key Changes
+1. **Subagent Invocation**: Users invoke Ralph via `@ralph` (idiomatic OpenCode pattern)
+2. **Native Tool Usage**: Uses `read`/`write`/`edit`/`todowrite`/`todoread` for all operations
+3. **jq for JSON Processing**: Uses `jq` for PRD querying (instead of Python scripts)
+4. **No External Dependencies**: Ralph skill works entirely within OpenCode tool ecosystem
+
+### PRD Processing with jq
+Ralph uses `jq` commands for PRD operations:
+- Check completion: `jq '.userStories | all(.passes == true)' prd.json`
+- Get incomplete stories: `jq '.userStories[] | select(.passes == false)' prd.json`
+- Get next story: `jq '.userStories[] | select(.passes == false) | {id: .id, title: .title, priority: .priority}' prd.json | jq -s 'sort_by(.priority) | first'`
+
+### State Management with todowrite/todoread
+- Iteration counters and failure tracking stored via `todowrite`/`todoread`
+- Clean state isolation between orchestrator runs
+
+## Using Ralph (Idiomatic OpenCode Approach)
+
+### Invocation Methods
+
+1. **Via @mention (recommended)**:
+   ```bash
+   @ralph run the autonomous development loop
+   ```
+   The Ralph subagent loads the Ralph skill and starts iterating through PRD stories.
+
+2. **Via command**:
+   ```bash
+   /ralph-run [max_iterations]
+   ```
+   Example: `/ralph-run 5` for 5 iterations maximum.
+
+3. **Manual orchestration**:
+   You can also spawn Ralph via Task tool for testing.
+
+### Workflow
+1. Ralph subagent loads Ralph skill
+2. Validates PRD using OpenCode `read` tool and `jq`
+3. Spawns worker subagents for each story via Task tool
+4. Each worker implements a single story, runs quality gates, commits changes
+5. Orchestrator updates PRD and progress.txt
+6. Loop continues until all stories complete or max iterations reached
 
 ## Commands
 
@@ -92,7 +140,10 @@ cd flowchart && npm run dev
 # Build the flowchart
 cd flowchart && npm run build
 
-# Run Ralph (requires prd.json in current directory)
+# Run Ralph via @mention (recommended)
+@ralph start development loop
+
+# Alternative: Use legacy bash script (deprecated)
 ./ralph.sh [max_iterations]
 
 # Run Python quality checks (if working on Python projects)
@@ -151,8 +202,8 @@ npm run dev
 
 Ralph includes custom OpenCode commands for common tasks:
 
-- `/ralph-validate` - Validate PRD.json structure
-- `/ralph-run` - Run Ralph with optional max iterations (`/ralph-run 5`)
+- `/ralph-validate` - Validate PRD.json structure (uses both Python script and OpenCode native validation)
+- `/ralph-run` - Run Ralph subagent with optional max iterations (`/ralph-run 5`)
 - `/ralph-status` - Check current Ralph status and progress
 - `/ralph-quality` - Run quality gates (tests, linting, formatting)
 - `/ralph-test-complete` - Test command that outputs COMPLETE signal
@@ -200,6 +251,14 @@ Ralph + OpenCode workflow has been demonstrated to work:
    - `/ralph-test-complete` - Test COMPLETE signal
 5. **COMPLETE Signal** - Ralph detects `<promise>COMPLETE</promise>` to exit loop
 6. **Integration Tests** - Tests use real OpenCode CLI (not mocks)
+
+### 🚀 New: Idiomatic OpenCode Approach (Current)
+Ralph has been redesigned for pure OpenCode integration:
+- **Subagent Invocation**: Users invoke via `@ralph` (idiomatic OpenCode pattern)
+- **Pure OpenCode Tools**: Uses `read`/`write`/`edit`/`todowrite`/`todoread` for all operations
+- **jq for JSON Processing**: Replaces Python scripts with `jq` commands
+- **No External Dependencies**: Works entirely within OpenCode tool ecosystem
+- **Skill-Driven**: Ralph skill guides subagent through iterative development
 
 ### 🧪 Test Architecture
 - **Unit Tests**: PRD validation (3 passing tests)

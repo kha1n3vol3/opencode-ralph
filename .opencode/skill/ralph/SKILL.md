@@ -4,11 +4,10 @@ description: "Ralph autonomous AI agent loop for OpenCode. Runs iterative develo
 license: MIT
 compatibility: opencode
 metadata:
-  tools: bash, read, write, edit, glob, grep, task, skill
+  tools: bash, read, write, edit, glob, grep, task, skill, todowrite, todoread
   requires:
     - prd.json
     - progress.txt
-    - scripts/ralph/core.py
 ---
 
 # Ralph Autonomous Development Loop
@@ -20,41 +19,39 @@ You are the Ralph orchestrator agent. Your task is to run the Ralph autonomous d
 Before starting, verify these files exist in the current directory:
 - `prd.json` - Product Requirements Document with user stories
 - `progress.txt` - Progress log (will be created if missing)
-- `scripts/ralph/core.py` - Ralph core logic module
 
 ## Orchestrator Workflow
 
 Follow these steps precisely:
 
 ### 1. Initialize and Validate
-1. **Check prerequisites**: Use `read` tool to verify `prd.json`, `progress.txt`, and `scripts/ralph/core.py` exist.
-2. **Validate PRD**: Run validation: `bash: python3 scripts/ralph/validate_prd.py prd.json` (or check manually)
-3. **Read PRD**: Use `read` tool to load `prd.json`. Parse it as JSON.
-4. **Check completion**: Use the Ralph core module to check if all stories are complete:
-   ```bash
-   python3 -c "from scripts.ralph.core import is_complete, read_prd; import json; prd = read_prd('prd.json'); print('COMPLETE' if is_complete(prd) else 'INCOMPLETE')"
-   ```
-   - If output is "COMPLETE": Output `<promise>COMPLETE</promise>` and exit.
-5. **Initialize counters**: 
-   - `iteration = 0`
-   - `max_iterations = 10` (default, or from command arguments if provided)
-   - `failed_stories = {}` (track story failure counts for stagnation detection)
+1. **Check prerequisites**: Use `read` tool to verify `prd.json` exists. If `progress.txt` doesn't exist, create it later.
+2. **Validate PRD**: Read `prd.json` and validate structure:
+   - Required top-level fields: `project`, `branchName`, `description`, `userStories`
+   - `userStories` must be a list, each story must have `id`, `title`, `description`, `acceptanceCriteria`, `priority`, `passes`, `notes`
+   - If invalid, output `ERROR: Invalid PRD structure` and stop.
+3. **Read PRD**: Parse PRD JSON into memory.
+4. **Check completion**: Check if all stories have `passes: true`:
+   - If yes: Output `<promise>COMPLETE</promise>` and exit.
+5. **Initialize counters** using todowrite:
+   - Create todo item "Ralph iteration state" with fields: `iteration=0`, `max_iterations=10` (default, or from command arguments), `failed_stories={}`
 
 ### 2. Main Loop
 Repeat while `iteration < max_iterations`:
 
 #### 2.1. Get Next Story
-1. Run Python to get next story:
-   ```bash
-   python3 -c "from scripts.ralph.core import get_next_story, read_prd; import json; prd = read_prd('prd.json'); story = get_next_story(prd); print(json.dumps(story) if story else 'COMPLETE')"
-   ```
-2. If output is "COMPLETE": All stories done, output `<promise>COMPLETE</promise>` and exit.
-3. Parse story JSON: `story_id = story['id']`, `story_title = story['title']`.
+1. **Read PRD** again (in case it changed).
+2. **Filter incomplete stories**: Find stories where `passes` is false.
+3. **Sort by priority**: Lower number = higher priority. Handle both numeric and string priorities (e.g., "P1").
+4. **Select highest priority incomplete story**.
+5. If no incomplete stories: Output `<promise>COMPLETE</promise>` and exit.
+6. Set `story_id = story['id']`, `story_title = story['title']`.
 
 #### 2.2. Check Stagnation
+- Read `failed_stories` from todo state.
 - If `story_id` in `failed_stories` and `failed_stories[story_id] >= 3`:
   - Append to progress: "Story {story_id} failed 3 times, skipping"
-  - Mark story as passed with note "Skipped due to repeated failures"
+  - Mark story as passed with note "Skipped due to repeated failures" (see 2.4.1)
   - Update PRD and continue loop
 
 #### 2.3. Spawn Worker Subagent
@@ -71,28 +68,26 @@ Tools: All tools (read, write, edit, bash, glob, grep, skill)
 - Wait for worker completion (Task tool blocks until done)
 - Check worker output for "SUCCESS" or "FAILURE" signal
 - **If SUCCESS**:
-  1. Update PRD: Mark story complete:
-     ```bash
-     python3 -c "from scripts.ralph.core import mark_story_complete, read_prd, write_prd; prd = read_prd('prd.json'); updated = mark_story_complete(prd, '{story_id}', 'Completed by Ralph worker'); write_prd('prd.json', updated)"
-     ```
-  2. Append progress:
-     ```bash
-     python3 -c "from scripts.ralph.core import update_progress; update_progress('progress.txt', '{story_id}', 'Implemented {story_title}', ['Worker completed successfully'])"
-     ```
-  3. Clear failure count for this story
+  1. **Update PRD**: Mark story complete:
+     - Read PRD JSON
+     - Find story by id, set `passes: true`, add note "Completed by Ralph worker"
+     - Write updated PRD back using `write` tool
+  2. **Append progress**:
+     - Read progress.txt (create if missing with header)
+     - Append new entry with timestamp, story ID, implementation notes, and learnings
+     - Format: `## [YYYY-MM-DD HH:MM:SS] - {story_id}\n- Implemented {story_title}\n- **Learnings for future iterations:**\n  - Worker completed successfully\n---`
+  3. Clear failure count for this story in todo state
 - **If FAILURE**:
-  1. Increment failure count: `failed_stories[story_id] = failed_stories.get(story_id, 0) + 1`
+  1. Increment failure count in todo state: `failed_stories[story_id] = failed_stories.get(story_id, 0) + 1`
   2. Append progress with error:
-     ```bash
-     python3 -c "from scripts.ralph.core import update_progress; update_progress('progress.txt', '{story_id}', 'FAILED: {story_title}', ['Worker failed - story remains incomplete', 'Failure count: ' + str(failed_stories.get('{story_id}', 1))])"
-     ```
+     - Append entry noting failure and failure count
 
 #### 2.5. Check Branch Consistency
 - Check if still on correct branch from PRD `branchName`
 - If not, checkout correct branch: `bash: git checkout {branchName}`
 
 #### 2.6. Increment and Continue
-- `iteration += 1`
+- Update todo state: `iteration += 1`
 - Check if `iteration >= max_iterations`: if yes, exit with "Max iterations reached"
 
 ### 3. Exit Conditions and Cleanup
@@ -160,9 +155,9 @@ If you discover reusable patterns, add them to the `## Codebase Patterns` sectio
 ## Commands Integration
 
 This skill works with Ralph OpenCode commands:
-- `/ralph-run [max_iterations]` - Invokes this skill with optional max iterations
+- `/ralph-run [max_iterations]` - Invokes Ralph subagent with optional max iterations
 - `/ralph-status` - Shows current PRD status and progress
-- `/ralph-validate` - Validates PRD structure
+- `/ralph-validate` - Validates PRD structure using OpenCode tools
 - `/ralph-quality` - Runs quality gates
 - `/ralph-test-complete` - Tests COMPLETE signal detection
 
@@ -170,11 +165,11 @@ This skill works with Ralph OpenCode commands:
 
 Ralph uses two OpenCode agent configurations:
 
-### Primary Orchestrator (ralph.md)
+### Ralph Subagent (ralph.md)
 - **Location**: `.opencode/agent/ralph.md`
-- **Mode**: `primary` with full tool access (including Task and Skill)
+- **Mode**: `subagent` (invokable via @ralph)
 - **Role**: Loads this skill, validates prerequisites, spawns worker subagents
-- **Frontmatter**: `mode: primary`, `model: anthropic/claude-3-5-sonnet-20241022`
+- **Frontmatter**: `mode: subagent`, `model: anthropic/claude-3-5-sonnet-20241022`
 - **Behavior**: Implements orchestrator loop with stagnation detection and quality gates
 
 ### Worker Subagent (ralph-worker.md)
@@ -184,7 +179,7 @@ Ralph uses two OpenCode agent configurations:
 - **Frontmatter**: `mode: subagent`, `hidden: true`, restricted tools (no Task)
 - **Behavior**: Returns SUCCESS/FAILURE signal to orchestrator
 
-These agents implement the orchestrator-worker pattern with clean context isolation per US-002 research.
+These agents implement the orchestrator-worker pattern with clean context isolation.
 
 ## Output Signals
 

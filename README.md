@@ -10,11 +10,11 @@ Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 
 Ralph uses an **orchestrator-worker pattern** with two specialized OpenCode agents:
 
-### Primary Orchestrator Agent (`ralph.md`)
-- **Mode**: `primary` with full tool access (including `task` and `skill`)
+### Ralph Subagent (`ralph.md`)
+- **Mode**: `subagent` (invokable via `@ralph`) with full tool access (including `task` and `skill`)
 - **Role**: Loads Ralph skill, validates prerequisites, spawns worker subagents
 - **Location**: `.opencode/agent/ralph.md`
-- **Behavior**: Implements orchestrator loop with stagnation detection and quality gates
+- **Behavior**: Implements orchestrator loop with stagnation detection and quality gates using pure OpenCode tools
 
 ### Worker Subagent (`ralph-worker.md`)
 - **Mode**: `subagent` with `hidden: true` (restricted tools - no `task`)
@@ -23,6 +23,15 @@ Ralph uses an **orchestrator-worker pattern** with two specialized OpenCode agen
 - **Behavior**: Returns SUCCESS/FAILURE signal to orchestrator
 
 This architecture provides **clean context isolation** per user story while maintaining persistence via git commits and file updates.
+
+## Idiomatic OpenCode Integration
+
+Ralph now uses **pure OpenCode native tools** for idiomatic integration:
+
+- **Subagent Invocation**: Users invoke Ralph via `@ralph` or `/ralph-run` command
+- **Native Tool Usage**: Uses `read`/`write`/`edit`/`todowrite`/`todoread` for all operations
+- **jq for JSON Processing**: Uses `jq` commands for PRD querying (replaces Python scripts)
+- **No External Dependencies**: Ralph skill works entirely within OpenCode tool ecosystem
 
 ## Key Features
 
