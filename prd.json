@@ -17,6 +17,36 @@
       "priority": 1,
       "passes": true,
       "notes": "AGENTS.md updated with setup instructions including prerequisites, verification steps, and example PRD creation."
+    },
+    {
+      "id": "US-002",
+      "title": "Research OpenCode agent capabilities for Ralph loop",
+      "description": "As a developer, I need to understand OpenCode agent capabilities to design an agent-based Ralph loop that replaces bash scripts.",
+      "acceptanceCriteria": [
+        "Research Task tool behavior for subagent invocation and completion waiting",
+        "Test subagent context isolation and file persistence",
+        "Document agent configuration options (maxSteps, permissions, tools)",
+        "Verify orchestrator-worker pattern is feasible",
+        "Update research issue with findings and close it"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Research completed: Task tool waits for subagent completion; subagents have clean context per invocation; filesystem persists; orchestrator-worker pattern is feasible; agent configuration supports maxSteps, tool permissions, and hidden subagents."
+    },
+    {
+      "id": "US-003",
+      "title": "TDD for Ralph loop core logic modules",
+      "description": "As a developer, I want tested Python modules for PRD processing, completion detection, and progress tracking to support agent-based Ralph.",
+      "acceptanceCriteria": [
+        "Create tdd/test_ralph_loop.py with RED phase tests for core functions",
+        "Implement ralph.core module with get_next_story, is_complete, update_progress",
+        "All tests pass with 100% coverage of core logic",
+        "Integration tests for file operations (PRD, progress.txt)",
+        "Commit changes with message 'feat: US-003 - TDD for Ralph loop core logic'"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     }
   ]
 }
